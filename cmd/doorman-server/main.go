@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/rakyll/statik/fs"
 
@@ -13,7 +12,6 @@ import (
 )
 
 const timeLayout = "2 Jan, 3:04pm"
-const timezone = "America/Los_Angeles"
 
 func fatalIfEmpty(key string) string {
 	val := os.Getenv(key)
@@ -30,13 +28,7 @@ func main() {
 	baseUrl := fatalIfEmpty("BASE_URL")
 	port := fatalIfEmpty("PORT")
 
-	location, err := time.LoadLocation(timezone)
-
-	if err != nil {
-		log.Fatalf("Invalid timezone %s", timezone)
-	}
-
-	doorman := doorman.NewDoorman(accountSid, authToken, phoneNumber, timeLayout, baseUrl, location)
+	doorman := doorman.NewDoorman(accountSid, authToken, phoneNumber, timeLayout, baseUrl)
 	statikFS, err := fs.New()
 
 	if err != nil {
