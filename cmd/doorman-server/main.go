@@ -11,7 +11,7 @@ import (
 	_ "github.com/kelvl/doorman/statik"
 )
 
-const timeLayout = "18 Dec, 4:30pm"
+const timeLayout = "2 Jan, 3:04pm"
 
 func fatalIfEmpty(key string) string {
 	val := os.Getenv(key)

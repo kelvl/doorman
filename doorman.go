@@ -108,7 +108,7 @@ func (d *Doorman) Door(w http.ResponseWriter, r *http.Request) {
 	res, err := d.TwilioClient.PostForm(d.messageUrl(), url.Values{
 		"From": {r.FormValue("Called")},
 		"To":   {d.PhoneNumber},
-		"Body": {fmt.Sprintf("%s - Someone is at the gate. 1 to open, 2 to talk to the person.", time.Now())},
+		"Body": {fmt.Sprintf("%s - Someone is at the gate. 1 to open, 2 to talk to the person.", time.Now().Format(dateLayout))},
 	})
 
 	if err != nil {
