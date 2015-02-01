@@ -22,6 +22,7 @@ type Doorman struct {
 	OpenEnd      time.Time
 	CallSid      string
 	BaseUrl      string
+	Location     *time.Location
 }
 
 const (
@@ -45,9 +46,9 @@ func (d *Doorman) callUrl() string {
 	return fmt.Sprintf("https://api.twilio.com/2010-04-01/Accounts/%s/Calls/%s.json", d.TwilioClient.AccountSid, d.CallSid)
 }
 
-func NewDoorman(accountSid, authToken, phoneNumber, timeLayout, baseUrl string) *Doorman {
+func NewDoorman(accountSid, authToken, phoneNumber, timeLayout, baseUrl string, location *time.Location) *Doorman {
 	client := twilio.NewTwilioClient(accountSid, authToken)
-	doorman := &Doorman{TwilioClient: client, PhoneNumber: phoneNumber, TimeLayout: timeLayout, BaseUrl: baseUrl}
+	doorman := &Doorman{TwilioClient: client, PhoneNumber: phoneNumber, TimeLayout: timeLayout, BaseUrl: baseUrl, Location: location}
 	return doorman
 }
 
@@ -84,7 +85,7 @@ func (d *Doorman) Open(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *Doorman) cleanUpTimes() {
-	if d.OpenStart.Before(time.Now()) && d.OpenEnd.Before(time.Now()) {
+	if d.OpenStart.Before(time.Now().In(d.Location)) && d.OpenEnd.Before(time.Now().In(d.Location)) {
 		d.OpenStart = time.Time{}
 		d.OpenEnd = time.Time{}
 	}
@@ -97,7 +98,7 @@ func (d *Doorman) Door(w http.ResponseWriter, r *http.Request) {
 
 	// check if the door is already opened
 	// if yes then just open the door and return
-	if time.Now().After(d.OpenStart) && time.Now().Before(d.OpenEnd) {
+	if time.Now().In(d.Location).After(d.OpenStart) && time.Now().In(d.Location).Before(d.OpenEnd) {
 		log.Println("Door is marked open, automatically opening door.")
 		d.Open(w, r)
 		return
@@ -110,7 +111,7 @@ func (d *Doorman) Door(w http.ResponseWriter, r *http.Request) {
 	res, err := d.TwilioClient.PostForm(d.messageUrl(), url.Values{
 		"From": {r.FormValue("Called")},
 		"To":   {d.PhoneNumber},
-		"Body": {fmt.Sprintf("%s - Someone is at the gate. 1 to open, 2 to talk to the person.", time.Now().Format(dateLayout))},
+		"Body": {fmt.Sprintf("%s - Someone is at the gate. 1 to open, 2 to talk to the person.", time.Now().In(d.Location).Format(dateLayout))},
 	})
 
 	if err != nil {
@@ -200,8 +201,8 @@ func (d *Doorman) Sms(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			d.OpenStart = time.Now()
-			d.OpenEnd = time.Now().Add(duration)
+			d.OpenStart = time.Now().In(d.Location)
+			d.OpenEnd = time.Now().In(d.Location).Add(duration)
 			fmt.Fprint(w, d.ruleStatus())
 			return
 
@@ -209,7 +210,7 @@ func (d *Doorman) Sms(w http.ResponseWriter, r *http.Request) {
 			matches := openRegex.FindStringSubmatch(response)
 			start := now.MustParse(matches[1])
 			end := now.MustParse(matches[2])
-			if start.Before(time.Now()) {
+			if start.Before(time.Now().In(d.Location)) {
 				start = start.AddDate(0, 0, 1)
 			}
 			if end.Before(start) {
@@ -240,9 +241,9 @@ Valid commands: open from, open for, status, clear`
 }
 
 func (d *Doorman) ruleStatus() string {
-	if !d.OpenStart.IsZero() && d.OpenStart.Before(time.Now()) {
+	if !d.OpenStart.IsZero() && d.OpenStart.Before(time.Now().In(d.Location)) {
 		return fmt.Sprintf("Gate is open until %s", d.OpenEnd.Format(dateLayout))
-	} else if !d.OpenStart.IsZero() && d.OpenStart.After(time.Now()) {
+	} else if !d.OpenStart.IsZero() && d.OpenStart.After(time.Now().In(d.Location)) {
 		return fmt.Sprintf("Gate is open from %s to %s", d.OpenStart.Format(dateLayout), d.OpenEnd.Format(dateLayout))
 	} else {
 		return "No rules defined"
