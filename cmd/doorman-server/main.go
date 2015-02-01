@@ -26,6 +26,7 @@ func main() {
 	authToken := fatalIfEmpty("TWILIO_AUTH_TOKEN")
 	phoneNumber := fatalIfEmpty("PHONE_NUMBER")
 	baseUrl := fatalIfEmpty("BASE_URL")
+	port := fatalIfEmpty("PORT")
 
 	doorman := doorman.NewDoorman(accountSid, authToken, phoneNumber, timeLayout, baseUrl)
 	statikFS, err := fs.New()
@@ -41,6 +42,6 @@ func main() {
 	mux.HandleFunc("/callme", doorman.CallMe)
 	mux.HandleFunc("/sms", doorman.Sms)
 
-	log.Println("Listening on 5000...")
-	log.Fatal(http.ListenAndServe(":5000", mux))
+	log.Printf("Listening on %s...", port)
+	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
