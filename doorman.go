@@ -33,6 +33,8 @@ func init() {
 	now.TimeFormats = append(now.TimeFormats, "3:04pm")
 	now.TimeFormats = append(now.TimeFormats, "3:04 pm")
 	now.TimeFormats = append(now.TimeFormats, "1504")
+	now.TimeFormats = append(now.TimeFormats, "3pm")
+	now.TimeFormats = append(now.TimeFormats, "304pm")
 }
 
 func (d *Doorman) messageUrl() string {
