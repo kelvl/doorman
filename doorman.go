@@ -25,7 +25,7 @@ type Doorman struct {
 }
 
 const (
-	dateLayout = "2/1 3:04pm"
+	dateLayout = "Sun 2 Jan, 3:04pm"
 )
 
 func init() {
