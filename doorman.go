@@ -209,6 +209,9 @@ func (d *Doorman) Sms(w http.ResponseWriter, r *http.Request) {
 			matches := openRegex.FindStringSubmatch(response)
 			start := now.MustParse(matches[1])
 			end := now.MustParse(matches[2])
+
+			log.Printf("Matched times %v - %v", start.Format(dateLayout), end.Format(dateLayout))
+
 			if start.Before(time.Now()) {
 				start = start.AddDate(0, 0, 1)
 			}
