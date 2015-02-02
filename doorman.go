@@ -240,7 +240,7 @@ Valid commands: open from, open for, status, clear`
 }
 
 func (d *Doorman) ruleStatus() string {
-	log.Printf("Rules: Start %v End %v", d.OpenStart, d.OpenEnd)
+	log.Printf("Rules: Start %v End %v", d.OpenStart.Format(dateLayout), d.OpenEnd.Format(dateLayout))
 	if !d.OpenStart.IsZero() && d.OpenStart.Before(time.Now()) {
 		return fmt.Sprintf("Gate is open until %s", d.OpenEnd.Format(dateLayout))
 	} else if !d.OpenStart.IsZero() && d.OpenStart.After(time.Now()) {
