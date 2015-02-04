@@ -1,6 +1,7 @@
 package doorman
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jinzhu/now"
 	"github.com/kelvl/doorman/twilio"
 )
 
@@ -28,13 +28,27 @@ const (
 	dateLayout = "Sun 2 Jan, 3:04pm"
 )
 
-func init() {
-	log.Println("Adding formats")
-	now.TimeFormats = append(now.TimeFormats, "3:04pm")
-	now.TimeFormats = append(now.TimeFormats, "3:04 pm")
-	now.TimeFormats = append(now.TimeFormats, "1504")
-	now.TimeFormats = append(now.TimeFormats, "3pm")
-	now.TimeFormats = append(now.TimeFormats, "304pm")
+func parseTimes(str string) (t time.Time, err error) {
+	formats := []string{"1504", "3:04pm", "3:04 pm", "3pm"}
+	for _, format := range formats {
+		p, e := time.Parse(format, str)
+		if e == nil {
+			cur := time.Now()
+			t = time.Date(cur.Year(), cur.Month(), cur.Day(), p.Hour(), p.Minute(), p.Second(), p.Nanosecond(), cur.Location())
+			err = e
+			return
+		}
+	}
+	err = errors.New("Can't parse string as time: " + str)
+	return
+}
+
+func mustParseTimes(str string) (t time.Time) {
+	t, err := parseTimes(str)
+	if err != nil {
+		panic(err)
+	}
+	return t
 }
 
 func (d *Doorman) messageUrl() string {
@@ -207,13 +221,17 @@ func (d *Doorman) Sms(w http.ResponseWriter, r *http.Request) {
 
 		case strings.HasPrefix(response, "open from"):
 			matches := openRegex.FindStringSubmatch(response)
-			start := now.MustParse(matches[1])
-			end := now.MustParse(matches[2])
 
-			log.Printf("Matched times %v - %v", start.Format(dateLayout), end.Format(dateLayout))
+			cur := time.Now()
+			start := mustParseTimes(matches[1])
+			end := mustParseTimes(matches[2])
 
-			if start.Before(time.Now()) {
-				start = start.AddDate(0, 0, 1)
+			log.Printf("Matched times %v - %v", start.Format("2006-01-02 15:04:05 MST"), end.Format("2006-01-02 15:04:05 MST"))
+
+			if start.Before(cur) {
+				newStart := start.AddDate(0, 0, 1)
+				log.Printf("Start Time %v is before now %v, Adding 1 day to start time %v", start.Format(dateLayout), cur.Format(dateLayout), newStart.Format(dateLayout))
+				start = newStart
 			}
 			if end.Before(start) {
 				end = end.AddDate(0, 0, 1)
