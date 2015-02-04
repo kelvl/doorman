@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/rakyll/statik/fs"
 
@@ -41,6 +43,14 @@ func main() {
 	mux.HandleFunc("/door", doorman.Door)
 	mux.HandleFunc("/callme", doorman.CallMe)
 	mux.HandleFunc("/sms", doorman.Sms)
+	mux.HandleFunc("/dummy", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintf(w, "nothing")
+	})
+
+	time.AfterFunc(time.Second*15, func() {
+		http.NewRequest("GET", fmt.Sprintf("%s/dummy"), nil)
+	})
 
 	log.Printf("Listening on %s...", port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
