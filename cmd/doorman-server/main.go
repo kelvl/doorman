@@ -48,9 +48,15 @@ func main() {
 		fmt.Fprintf(w, "nothing")
 	})
 
-	time.AfterFunc(time.Second*15, func() {
-		http.NewRequest("GET", fmt.Sprintf("%s/dummy"), nil)
-	})
+	ticker := time.NewTicker(15 * time.Second)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				http.NewRequest("GET", fmt.Sprintf("%s/dummy"), nil)
+			}
+		}
+	}()
 
 	log.Printf("Listening on %s...", port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
