@@ -48,12 +48,14 @@ func main() {
 		fmt.Fprintf(w, "nothing")
 	})
 
+	fmt.Println("Starting scheduler")
 	ticker := time.NewTicker(15 * time.Second)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				http.NewRequest("GET", fmt.Sprintf("%s/dummy"), nil)
+				fmt.Println("Fetching myself")
+				http.NewRequest("GET", fmt.Sprintf("%s/dummy", baseUrl), nil)
 			}
 		}
 	}()
