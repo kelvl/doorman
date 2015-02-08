@@ -55,7 +55,8 @@ func main() {
 			select {
 			case <-ticker.C:
 				fmt.Println("Fetching myself")
-				http.NewRequest("GET", fmt.Sprintf("%s/dummy", baseUrl), nil)
+				resp, _ := http.Get(fmt.Sprintf("%s/dummy", baseUrl))
+				resp.Close()
 			}
 		}
 	}()
