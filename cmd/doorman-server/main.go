@@ -56,7 +56,7 @@ func main() {
 			case <-ticker.C:
 				fmt.Println("Fetching myself")
 				resp, _ := http.Get(fmt.Sprintf("%s/dummy", baseUrl))
-				resp.Close()
+				defer resp.Body.Close()
 			}
 		}
 	}()
