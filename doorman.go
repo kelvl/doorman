@@ -87,7 +87,7 @@ func (d *Doorman) Open(w http.ResponseWriter, r *http.Request) {
         <Response>
             <Pause length="1"></Pause>
             <Play loop="2">%s</Play>
-        </Response>        
+        </Response>
     `, "/static/9.wav")
 	w.Header().Set("Content-Type", "application/xml")
 	fmt.Fprintf(w, twiml)
@@ -159,11 +159,8 @@ func (d *Doorman) CallMe(w http.ResponseWriter, r *http.Request) {
 
 func (d *Doorman) Sms(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-
 	response := strings.TrimSpace(r.FormValue("Body"))
-
 	d.cleanUpTimes()
-
 	log.Printf("%q - %q", response, d.CallSid)
 
 	switch {
